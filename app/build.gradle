@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'checkstyle'
 }
 
 def legacySmoke = providers.gradleProperty('legacySmoke').isPresent()
@@ -7,7 +8,29 @@ def orchestrateLab = providers.gradleProperty('orchestrateLab').isPresent()
 def isolatedTests = orchestrateLab || providers.gradleProperty('isolateLab').isPresent()
 def labCoverage = providers.gradleProperty('labCoverage').isPresent()
 def robolectricLab = providers.gradleProperty('robolectricLab').isPresent()
+// -PnoR8 builds the same release without R8, only to measure the size difference (task 4).
+def useR8 = !providers.gradleProperty('noR8').isPresent()
 def espressoVersion = '3.7.0'
+
+// ---- Lab 8, task 2: Semantic Versioning (MAJOR.MINOR.PATCH) ----
+// versionCode = MAJOR * 10000 + MINOR * 100 + PATCH  ->  1.2.1 = 10201.
+// It only grows, so every store upload gets a unique, increasing code.
+def versionMajor = 1
+def versionMinor = 0
+def versionPatch = 0
+def kadrVersionName = "${versionMajor}.${versionMinor}.${versionPatch}"
+def kadrVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
+
+// ---- Lab 8, task 3/5: secrets live outside Git ----
+// Priority: keystore.properties / local.properties (developer PC) -> environment variables (CI).
+def localProps = new Properties()
+['local.properties', 'keystore.properties'].each { name ->
+    def f = rootProject.file(name)
+    if (f.exists()) f.withInputStream { localProps.load(it) }
+}
+def secret = { String key, String env -> localProps.getProperty(key) ?: System.getenv(env) }
+def releaseStore = secret('kadr.storeFile', 'KADR_KEYSTORE_PATH')
+def stagingApi = localProps.getProperty('kadr.stagingApiUrl') ?: 'https://philotiona.github.io/KADR/staging/api/v1/'
 
 android {
     namespace 'com.example.kaspikids'
@@ -19,8 +42,8 @@ android {
         applicationId "com.example.kaspikids"
         minSdk 24
         targetSdk 35
-        versionCode 100
-        versionName "0.1.0"
+        versionCode kadrVersionCode
+        versionName kadrVersionName
         testInstrumentationRunner legacySmoke
                 ? 'com.example.kaspikids.CinemaSmokeTest'
                 : 'androidx.test.runner.AndroidJUnitRunner'
@@ -29,15 +52,53 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            if (releaseStore) {
+                storeFile file(releaseStore)
+                storePassword secret('kadr.storePassword', 'KADR_KEYSTORE_PASSWORD')
+                keyAlias secret('kadr.keyAlias', 'KADR_KEY_ALIAS')
+                keyPassword secret('kadr.keyPassword', 'KADR_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         debug {
-            if (isolatedTests) applicationIdSuffix '.labtest'
+            applicationIdSuffix isolatedTests ? '.labtest' : '.debug'
+            versionNameSuffix '-debug'
+            buildConfigField 'String', 'ENVIRONMENT', '"debug"'
+            buildConfigField 'String', 'API_BASE_URL', '"http://127.0.0.1:8080/api/v1/"'
+            buildConfigField 'boolean', 'DIAGNOSTICS', 'true'
             enableUnitTestCoverage labCoverage
             enableAndroidTestCoverage labCoverage
+        }
+        release {
+            // Lab 8, task 4: R8 shrinking + obfuscation + optimisation, unused resources removed.
+            minifyEnabled useR8
+            shrinkResources useR8
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField 'String', 'ENVIRONMENT', '"release"'
+            buildConfigField 'String', 'API_BASE_URL', '"https://philotiona.github.io/KADR/api/v1/"'
+            buildConfigField 'boolean', 'DIAGNOSTICS', 'false'
+            // Signed only when the upload key is available (developer PC or CI secrets).
+            signingConfig releaseStore ? signingConfigs.release : null
+        }
+        staging {
+            initWith release
+            applicationIdSuffix '.staging'
+            versionNameSuffix '-staging'
+            buildConfigField 'String', 'ENVIRONMENT', '"staging"'
+            buildConfigField 'String', 'API_BASE_URL', "\"${stagingApi}\""
+            buildConfigField 'boolean', 'DIAGNOSTICS', 'true'
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
         }
         benchmark {
             initWith release
             applicationIdSuffix '.benchmark'
+            minifyEnabled false
+            shrinkResources false
             signingConfig signingConfigs.debug
             matchingFallbacks = ['release']
         }
@@ -45,6 +106,7 @@ android {
 
     sourceSets {
         release.java.srcDir 'src/production/java'
+        staging.java.srcDir 'src/production/java'
         benchmark.java.srcDir 'src/production/java'
         if (robolectricLab) testDebug.java.srcDir 'src/testRobolectric/java'
     }
@@ -87,3 +149,22 @@ dependencies {
     androidTestUtil 'androidx.test:orchestrator:1.5.1'
 }
 
+
+// ---- Lab 8, task 10: Java linter for CI (ktlint/detekt are Kotlin-only) ----
+checkstyle {
+    toolVersion = '10.20.1'
+    configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+    ignoreFailures = false
+    maxWarnings = 50
+}
+tasks.register('checkstyleMain', Checkstyle) {
+    group = 'verification'
+    description = 'Runs Checkstyle on app Java sources.'
+    source 'src/main/java', 'src/production/java', 'src/debug/java'
+    include '**/*.java'
+    classpath = files()
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}

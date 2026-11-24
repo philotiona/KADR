@@ -1,0 +1,68 @@
+# Lab 8, task 10 — Continuous Integration.
+# Every push and pull request: Java linter (Checkstyle) + Android Lint + unit tests + build.
+# The debug/staging APKs are kept as downloadable artifacts.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    tags-ignore: ['v*']        # tags are handled by release.yml
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lint · Unit tests · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;34.0.0"
+
+      - name: Linter — Checkstyle
+        run: bash ./gradlew :app:checkstyleMain
+
+      - name: Linter — Android Lint
+        run: bash ./gradlew :app:lintDebug
+
+      - name: Unit tests (JUnit + Mockito + MockWebServer)
+        run: bash ./gradlew :app:testDebugUnitTest
+
+      - name: Build debug and staging APK
+        run: bash ./gradlew :app:assembleDebug :app:assembleStaging
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kadr-apk-${{ github.sha }}
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/staging/*.apk
+            app/build/outputs/mapping/staging/mapping.txt
+          retention-days: 14
+
+      - name: Upload lint and test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kadr-reports-${{ github.sha }}
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          retention-days: 14

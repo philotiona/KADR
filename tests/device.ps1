@@ -17,6 +17,6 @@ try {
     New-Item -ItemType Directory -Force -Path 'output\screenshots' | Out-Null
     $images = @('01-login','02-home','03-movie','04-seats','05-ticket','06-profile','07-admin','08-schedule','09-registration','sample-ticket')
     foreach ($image in $images) {
-        & $adb pull "/sdcard/Android/data/com.example.kaspikids/files/$image.png" "output/screenshots/$image.png"
+        & $adb pull "/sdcard/Android/data/com.example.kaspikids.debug/files/$image.png" "output/screenshots/$image.png"
     }
 } finally { Pop-Location }

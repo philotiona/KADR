@@ -1,7 +1,7 @@
 name: KADR Lab 7
 
+# Lab 8: heavy emulator suite runs on demand (Actions -> KADR Lab 7 -> Run workflow).
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:

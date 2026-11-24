@@ -1,0 +1,34 @@
+# KADR — Google Play lanes (Lab 8, tasks 11–12).
+# Used when a Play Console account is connected: `bundle exec fastlane <lane>`.
+# Credentials: PLAY_SERVICE_ACCOUNT_JSON (CI Secret) -> json_key_data.
+default_platform(:android)
+
+platform :android do
+  aab     = lambda { |v| "dist/KADR-#{v}.aab" }
+  mapping = lambda { |v| "dist/KADR-#{v}-mapping.txt" }
+
+  desc "Upload a signed AAB to the internal testing track"
+  lane :internal do |o|
+    upload_to_play_store(track: "internal", aab: aab.(o[:version]), mapping: mapping.(o[:version]),
+                         metadata_path: "distribution", skip_upload_images: true, skip_upload_screenshots: true)
+  end
+
+  desc "Promote internal -> production as a staged rollout (default 1%)"
+  lane :promote do |o|
+    upload_to_play_store(track: "internal", track_promote_to: "production",
+                         rollout: (o[:rollout] || "0.01"), skip_upload_aab: true,
+                         skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
+  end
+
+  desc "Increase rollout: fastlane rollout fraction:0.1 | 0.5 | 1.0"
+  lane :rollout do |o|
+    upload_to_play_store(track: "production", rollout: o[:fraction], skip_upload_aab: true,
+                         skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
+  end
+
+  desc "Halt the current production rollout (crash/ANR spike)"
+  lane :halt do
+    upload_to_play_store(track: "production", release_status: "halted", skip_upload_aab: true,
+                         skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
+  end
+end

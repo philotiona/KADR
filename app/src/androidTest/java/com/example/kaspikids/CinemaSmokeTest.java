@@ -78,7 +78,7 @@ public class CinemaSmokeTest extends Instrumentation {
         android.view.accessibility.AccessibilityNodeInfo root=null;
         for(int i=0; i<50; i++) {
             root=getUiAutomation().getRootInActiveWindow();
-            if(root!=null&&"com.example.kaspikids".contentEquals(root.getPackageName()))break;
+            if(root!=null&&BuildConfig.APPLICATION_ID.contentEquals(root.getPackageName()))break;
             Thread.sleep(100);
         }
         Thread.sleep(200);
@@ -89,7 +89,7 @@ public class CinemaSmokeTest extends Instrumentation {
             }
             image.recycle();
         }
-        check(root!=null&&"com.example.kaspikids".contentEquals(root.getPackageName()),"App unobscured for "+name+" (active="+(root==null?"null":root.getPackageName())+")");
+        check(root!=null&&BuildConfig.APPLICATION_ID.contentEquals(root.getPackageName()),"App unobscured for "+name+" (active="+(root==null?"null":root.getPackageName())+")");
     }
     private void verifySchedule() {
         Bundle result = new Bundle();

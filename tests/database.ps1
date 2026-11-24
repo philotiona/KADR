@@ -17,7 +17,7 @@ try {
     if (-not ($result -match '^PASS:') -or ($result -match '^FAIL:')) { throw 'Database verification failed' }
     New-Item -ItemType Directory -Force -Path 'output\screenshots' | Out-Null
     foreach ($image in @('10-database-er','11-database-zoom','12-database-rows','13-database-checks','14-database-viewer')) {
-        & $adbPath pull "/sdcard/Android/data/com.example.kaspikids/files/$image.png" "output/screenshots/$image.png"
+        & $adbPath pull "/sdcard/Android/data/com.example.kaspikids.debug/files/$image.png" "output/screenshots/$image.png"
     }
     Copy-Item -LiteralPath "$buildRoot\debug\app-debug.apk" -Destination 'output\KADR.apk' -Force
 } finally { Pop-Location }

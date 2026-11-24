@@ -579,6 +579,15 @@ public class CinemaActivity extends Activity {
         ));
         text(content,"viewer / Cinema123!     admin / Admin123!",11,false).setTextColor(MUTED);
         addLabEntry();
+        versionFooter();
+    }
+    /** Lab 8, task 3: every build shows its version and, outside release, its environment and API. */
+    private void versionFooter() {
+        gap(content,18);
+        String env=BuildConfig.ENVIRONMENT.equals("release")?"":"\n"+BuildConfig.ENVIRONMENT.toUpperCase(Locale.ROOT)+"  ·  "+BuildConfig.APPLICATION_ID+"\nAPI: "+BuildConfig.API_BASE_URL;
+        TextView v=text(content,"Версия "+BuildConfig.VERSION_NAME+" ("+BuildConfig.VERSION_CODE+")"+env,11,false);
+        v.setTextColor(MUTED);
+        v.setTag("versionFooter");
     }
     private void addLabEntry() {
         if (BuildConfig.DEBUG) {
@@ -1181,6 +1190,7 @@ public class CinemaActivity extends Activity {
         button(content,"О приложении",WHITE,()->message("KADR. · Кинотеатр","Учебное приложение · практическая работа №5\n\nБронирование билетов и управление кинотеатром. Данные хранятся в SQLite на этом устройстве. Оплата выполняется в кассе.\n\nФильмы и афиши в начальном каталоге — авторские демонстрационные материалы. Промокоды: FIRST −10%, STUDENT −15%.\n\nAndroid 7.0+ · Java · SQLite\nВерсия 1.0"));
         addLabEntry();
         button(content,"Выйти",PAPER,this::logout);
+        versionFooter();
     }
     private void logout() {
         confirm("Выйти из аккаунта?","Сохранённые бронирования останутся в личном кабинете.",()-> {
