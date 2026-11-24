@@ -3,6 +3,16 @@ plugins {
     id 'checkstyle'
 }
 
+// ---- Lab 8, task 13: Firebase is enabled only when app/google-services.json exists ----
+// The file is not in Git: developers download it from the console, CI restores it from a secret.
+def hasFirebase = file('google-services.json').exists()
+if (hasFirebase) {
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+    // Only release (com.example.kaspikids) and staging (.staging) are registered in Firebase.
+    tasks.matching { it.name ==~ /process(Debug|Benchmark)GoogleServices/ }.configureEach { enabled = false }
+}
+
 def legacySmoke = providers.gradleProperty('legacySmoke').isPresent()
 def orchestrateLab = providers.gradleProperty('orchestrateLab').isPresent()
 def isolatedTests = orchestrateLab || providers.gradleProperty('isolateLab').isPresent()
@@ -16,7 +26,7 @@ def espressoVersion = '3.7.0'
 // versionCode = MAJOR * 10000 + MINOR * 100 + PATCH  ->  1.2.1 = 10201.
 // It only grows, so every store upload gets a unique, increasing code.
 def versionMajor = 1
-def versionMinor = 0
+def versionMinor = 1
 def versionPatch = 0
 def kadrVersionName = "${versionMajor}.${versionMinor}.${versionPatch}"
 def kadrVersionCode = versionMajor * 10000 + versionMinor * 100 + versionPatch
@@ -127,6 +137,9 @@ android {
 }
 
 dependencies {
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-analytics'
     debugImplementation "androidx.test.espresso:espresso-idling-resource:$espressoVersion"
     debugImplementation 'androidx.room:room-runtime:2.6.1'
     debugAnnotationProcessor 'androidx.room:room-compiler:2.6.1'

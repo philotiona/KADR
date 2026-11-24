@@ -19,6 +19,8 @@ import com.example.kaspikids.CinemaDb.Row;
 public class CinemaActivity extends Activity {
     static final int PAPER=0xfff5f1e8,INK=0xff191a1b,MUTED=0xff74736b,ACCENT=0xffff7447,YELLOW=0xfff5cc55,LINE=0xffd9d4c9,WHITE=0xfffffdf8;
     private CinemaDb db;
+    private RemoteConfig remote;
+    private boolean updatePromptShown;
     private DatabaseScreen databaseScreen;
     private Bundle databaseState;
     private Intent pendingDatabaseResult;
@@ -40,6 +42,8 @@ public class CinemaActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         db=new CinemaDb(this);
+        remote=new RemoteConfig(this);
+        Telemetry.init(this);
         token=getSharedPreferences("kadr",0).getString("session","");
         selectedDay=day(System.currentTimeMillis(),0);
         if(state!=null) {
@@ -77,6 +81,7 @@ public class CinemaActivity extends Activity {
                 finishWork(()-> {
                     render();
                     restoreFields();
+                    refreshRemoteConfig();
                 });
             }
             catch(Exception e) {
@@ -296,6 +301,8 @@ public class CinemaActivity extends Activity {
             message("Проверьте данные",e.getMessage());
         }
         catch(Exception e) {
+            if(e instanceof IllegalStateException&&String.valueOf(e.getMessage()).startsWith("KADR test crash"))throw (IllegalStateException)e;
+            Telemetry.nonFatal(e);
             android.util.Log.e("KADR","Operation failed",e);
             message("Не удалось выполнить действие","Попробуйте ещё раз. "+e.getClass().getSimpleName());
         }
@@ -489,6 +496,7 @@ public class CinemaActivity extends Activity {
             history.clear();
         }
         shell(true);
+        Telemetry.screen(screen);
         safe(()-> {
             switch(screen) {
                 case "movie":movieScreen(routeId);
@@ -550,6 +558,7 @@ public class CinemaActivity extends Activity {
                 String t=db.loginUser(username,password);
                 getSharedPreferences("kadr",0).edit().putString("session",t).commit();
                 token=t;
+                Telemetry.event("login",null,0);
                 return null;
             }
             ,()-> {
@@ -580,6 +589,41 @@ public class CinemaActivity extends Activity {
         text(content,"viewer / Cinema123!     admin / Admin123!",11,false).setTextColor(MUTED);
         addLabEntry();
         versionFooter();
+    }
+    /** Lab 8, tasks 12/14: remote config drives staged rollout, forced update and feature flags. */
+    private void refreshRemoteConfig() {
+        new Thread(()-> {
+            remote.refresh();
+            runOnUiThread(this::checkForUpdate);
+        },"kadr-remote-config").start();
+    }
+    private void checkForUpdate() {
+        if(isFinishing()||isDestroyed())return;
+        if(remote.updateRequired()) {
+            AlertDialog d=new AlertDialog.Builder(this).setTitle("Требуется обновление")
+                .setMessage("Версия "+BuildConfig.VERSION_NAME+" больше не поддерживается. Установите KADR "+remote.latestVersionName()+", чтобы продолжить.\n\n"+remote.message())
+                .setCancelable(false)
+                .setPositiveButton("Скачать",(x,w)->{openUrl(remote.downloadUrl());finish();})
+                .create();
+            d.show();
+            return;
+        }
+        if(!updatePromptShown&&remote.updateAvailable()) {
+            updatePromptShown=true;
+            new AlertDialog.Builder(this).setTitle("Доступна версия "+remote.latestVersionName())
+                .setMessage(remote.message().isEmpty()?"Обновите приложение, чтобы получить исправления и новые функции.":remote.message())
+                .setNegativeButton("Позже",null)
+                .setPositiveButton("Обновить",(x,w)->openUrl(remote.downloadUrl()))
+                .show();
+        }
+    }
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse(url)));
+        }
+        catch(ActivityNotFoundException e) {
+            message("Не удалось открыть ссылку",url);
+        }
     }
     /** Lab 8, task 3: every build shows its version and, outside release, its environment and API. */
     private void versionFooter() {
@@ -1000,6 +1044,7 @@ public class CinemaActivity extends Activity {
                 try {
                     booking.set(db.book(token,id,seats,code));
                     if (BuildConfig.DEBUG) android.util.Log.i("KadrLab", "Booking saved");
+                    Telemetry.event("booking_created","seats",seats.size());
                     return "Места забронированы";
                 } finally {
                     android.os.Trace.endSection();
@@ -1187,8 +1232,18 @@ public class CinemaActivity extends Activity {
             button(content,"Управление кинотеатром →",WHITE,()->nav("admin",0));
         }
         line(content);
-        button(content,"О приложении",WHITE,()->message("KADR. · Кинотеатр","Учебное приложение · практическая работа №5\n\nБронирование билетов и управление кинотеатром. Данные хранятся в SQLite на этом устройстве. Оплата выполняется в кассе.\n\nФильмы и афиши в начальном каталоге — авторские демонстрационные материалы. Промокоды: FIRST −10%, STUDENT −15%.\n\nAndroid 7.0+ · Java · SQLite\nВерсия 1.0"));
+        button(content,"О приложении",WHITE,()->message("KADR. · Кинотеатр","Бронирование билетов и управление кинотеатром. Данные хранятся в SQLite на этом устройстве. Оплата выполняется в кассе.\n\nФильмы и афиши в начальном каталоге — авторские демонстрационные материалы. Промокоды: FIRST −10%, STUDENT −15%.\n\nAndroid 7.0+ · Java · SQLite\nВерсия "+BuildConfig.VERSION_NAME+" ("+BuildConfig.VERSION_CODE+")"));
+        button(content,"Что нового в "+BuildConfig.VERSION_NAME,WHITE,()->message("Что нового",getString(R.string.whats_new)));
+        button(content,"Сообщить о проблеме",WHITE,()->openUrl("https://github.com/philotiona/KADR/issues/new/choose"));
+        button(content,"Политика конфиденциальности",WHITE,()->openUrl("https://philotiona.github.io/KADR/privacy-policy.html"));
+        button(content,"Проверить обновления",WHITE,()->{updatePromptShown=false;toast("Проверяем…");refreshRemoteConfig();});
         addLabEntry();
+        if(BuildConfig.DIAGNOSTICS) {
+            line(content);
+            caption(content,"ДИАГНОСТИКА · "+BuildConfig.ENVIRONMENT.toUpperCase(Locale.ROOT)+(Telemetry.enabled()?" · FIREBASE ON":" · FIREBASE OFF"));
+            button(content,"Тестовый сбой (Crashlytics)",WHITE,Diagnostics::testCrash);
+            button(content,"Тестовый ANR (20 секунд)",WHITE,Diagnostics::testAnr);
+        }
         button(content,"Выйти",PAPER,this::logout);
         versionFooter();
     }

@@ -1,2 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="app_name">KADR · Кинотеатр</string></resources>
+<resources>
+    <string name="app_name">KADR · Кинотеатр</string>
+    <string name="whats_new">• «О приложении» показывает настоящую версию сборки.
+• Уведомление о новой версии и обязательное обновление через удалённую конфигурацию.
+• «Сообщить о проблеме» открывает трекер обращений.
+• Ссылка на политику конфиденциальности в личном кабинете.</string>
+</resources>

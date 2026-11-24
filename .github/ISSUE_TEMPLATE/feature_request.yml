@@ -1,0 +1,15 @@
+name: "💡 Пожелание / Feature request"
+description: Идея новой функции или улучшения
+title: "[Feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу вы хотите решить?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Как это могло бы работать?

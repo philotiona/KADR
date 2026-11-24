@@ -77,7 +77,7 @@ final class RemoteConfig {
     }
 
     String downloadUrl() {
-        return config.optString("download_url", "https://github.com/truthofgod/KADR/releases/latest");
+        return config.optString("download_url", "https://github.com/philotiona/KADR/releases/latest");
     }
 
     /** A newer version exists and this install is inside the current rollout percentage. */

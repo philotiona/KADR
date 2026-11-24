@@ -1,0 +1,42 @@
+name: "🐞 Ошибка / Bug"
+description: Приложение работает неправильно или закрывается
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Версия KADR
+      description: Личный кабинет → внизу экрана, например 1.1.0 (10100)
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Устройство и версия Android
+      placeholder: Pixel 7, Android 15
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      placeholder: "1. Войти как зритель\n2. Открыть «Афиша»\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемый и фактический результат
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Влияние
+      options:
+        - Приложение закрывается / нельзя забронировать (критично)
+        - Функция работает неверно, есть обходной путь
+        - Косметическая проблема
+    validations:
+      required: true

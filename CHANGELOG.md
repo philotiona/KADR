@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-24
+### Added
+- Firebase Crashlytics (сбои, нефатальные ошибки, хлебные крошки) и Google Analytics for Firebase (вход, бронирование, экраны).
+- Удалённая конфигурация `config.json`: уведомление о новой версии с поэтапной раздачей, обязательное обновление, флаги функций.
+- «Что нового», «Сообщить о проблеме», «Политика конфиденциальности», «Проверить обновления» в личном кабинете.
+- Диагностика в debug/staging: тестовый сбой и тестовый ANR.
+### Fixed
+- «О приложении» показывало жёстко заданную «Версия 1.0» и устаревший текст; теперь версия берётся из сборки (KI-1).
+### Security
+- Разрешение `INTERNET` используется только для HTTPS-запросов конфигурации и Firebase.
+
 ## [1.0.0] - 2026-11-24
 ### Added
 - Варианты сборки `debug`, `staging`, `release` с отдельными applicationId, API и иконками.
@@ -23,6 +34,7 @@
 ### Added
 - Первая внутренняя сборка: афиша, бронирование мест, электронные билеты с QR, касса, роли администратора и зрителя, локальная SQLite.
 
-[Unreleased]: https://github.com/philotiona/KADR/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/philotiona/KADR/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/philotiona/KADR/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/philotiona/KADR/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/philotiona/KADR/releases/tag/v0.1.0
