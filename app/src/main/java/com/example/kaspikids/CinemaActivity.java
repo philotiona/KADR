@@ -656,6 +656,7 @@ public class CinemaActivity extends Activity {
             weight(small(admin,"Регистрация пользователей",YELLOW,this::registerDialog));
             weight(small(admin,"Управление →",WHITE,()->nav("admin",0)));
         }
+        nearestShowCard();
         EditText q=field(content,"Поиск фильма",search,1);
         q.setHint("Название, жанр, режиссёр");
         LinearLayout list=col();
@@ -670,6 +671,35 @@ public class CinemaActivity extends Activity {
         }
         ));
         drawMovieList(list,false);
+    }
+    /** 1.2.0 feature: the next show today/tomorrow with a live countdown. Guarded by the remote flag nearest_show_card. */
+    private void nearestShowCard() {
+        if(!remote.flag(RemoteConfig.FLAG_NEAREST_SHOW,true))return;
+        long now=System.currentTimeMillis();
+        List<Row> next=db.shows(0,now,day(now,2),false);
+        if(next.isEmpty())return;
+        Row s=next.get(0);
+        gap(content,14);
+        LinearLayout c=card(content,YELLOW);
+        caption(c,"БЛИЖАЙШИЙ СЕАНС");
+        text(c,s.s("title"),22,true);
+        text(c,date(s.l("starts_at"),"d MMMM, HH:mm")+"  ·  "+s.s("hall_name"),13,false);
+        TextView countdown=text(c,"",13,true);
+        small(c,"Выбрать места →",WHITE,()->nav("seats",s.l("id")));
+        Runnable tick=new Runnable() {
+            @Override public void run() {
+                if(!countdown.isAttachedToWindow())return;
+                if(!remote.flag(RemoteConfig.FLAG_NEAREST_SHOW,true)) {
+                    c.setVisibility(View.GONE);
+                    return;
+                }
+                long minutes=Math.max(0,(s.l("starts_at")-System.currentTimeMillis())/60000);
+                int occupancy=(s.i("capacity")-s.i("free"))*100/s.i("capacity");
+                countdown.setText("Начало через "+minutes+" мин  ·  зал заполнен на "+occupancy+"%");
+                countdown.postDelayed(this,60000);
+            }
+        };
+        countdown.postDelayed(tick,1500);
     }
     private void filtersDialog() {
         LinearLayout p=col();
@@ -1236,7 +1266,7 @@ public class CinemaActivity extends Activity {
         button(content,"Что нового в "+BuildConfig.VERSION_NAME,WHITE,()->message("Что нового",getString(R.string.whats_new)));
         button(content,"Сообщить о проблеме",WHITE,()->openUrl("https://github.com/philotiona/KADR/issues/new/choose"));
         button(content,"Политика конфиденциальности",WHITE,()->openUrl("https://philotiona.github.io/KADR/privacy-policy.html"));
-        button(content,"Проверить обновления",WHITE,()->{updatePromptShown=false;toast("Проверяем…");refreshRemoteConfig();});
+        button(content,"Проверить обновления",WHITE,()->{updatePromptShown=false;toast("Проверяем… группа раздачи "+remote.bucket()+", сейчас раздаётся "+remote.rolloutPercent()+"%");refreshRemoteConfig();});
         addLabEntry();
         if(BuildConfig.DIAGNOSTICS) {
             line(content);

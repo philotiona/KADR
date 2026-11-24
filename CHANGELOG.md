@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-24
+### Added
+- Карточка «Ближайший сеанс» на главном экране: обратный отсчёт и заполненность зала (флаг `nearest_show_card`).
+- «Проверить обновления» показывает группу поэтапной раздачи.
+
 ## [1.1.0] - 2026-11-24
 ### Added
 - Firebase Crashlytics (сбои, нефатальные ошибки, хлебные крошки) и Google Analytics for Firebase (вход, бронирование, экраны).
@@ -34,7 +39,8 @@
 ### Added
 - Первая внутренняя сборка: афиша, бронирование мест, электронные билеты с QR, касса, роли администратора и зрителя, локальная SQLite.
 
-[Unreleased]: https://github.com/philotiona/KADR/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/philotiona/KADR/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/philotiona/KADR/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/philotiona/KADR/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/philotiona/KADR/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/philotiona/KADR/releases/tag/v0.1.0
