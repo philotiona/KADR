@@ -1,11 +1,11 @@
 {
-  "latest_version_code": 10100,
-  "latest_version_name": "1.1.0",
-  "rollout_percent": 0,
-  "min_supported_version_code": 0,
+  "latest_version_code": 10201,
+  "latest_version_name": "1.2.1",
+  "rollout_percent": 100,
+  "min_supported_version_code": 10201,
   "download_url": "https://github.com/philotiona/KADR/releases/latest",
-  "message": "",
+  "message": "KADR 1.2.1 исправляет сбой на главном экране версии 1.2.0. Обновление обязательно.",
   "flags": {
-    "nearest_show_card": false
+    "nearest_show_card": true
   }
 }
