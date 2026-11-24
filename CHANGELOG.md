@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-24
+### Fixed
+- Критично: сбой `ArithmeticException: divide by zero` в карточке «Ближайший сеанс» через 1–2 с после открытия «Афиши» (#3). Вместёмость зала теперь считается как `rows_count × cols_count`.
+
 ## [1.2.0] - 2026-11-24
 ### Added
 - Карточка «Ближайший сеанс» на главном экране: обратный отсчёт и заполненность зала (флаг `nearest_show_card`).
@@ -39,7 +43,8 @@
 ### Added
 - Первая внутренняя сборка: афиша, бронирование мест, электронные билеты с QR, касса, роли администратора и зрителя, локальная SQLite.
 
-[Unreleased]: https://github.com/philotiona/KADR/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/philotiona/KADR/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/philotiona/KADR/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/philotiona/KADR/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/philotiona/KADR/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/philotiona/KADR/compare/v0.1.0...v1.0.0

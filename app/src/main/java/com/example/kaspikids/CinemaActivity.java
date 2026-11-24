@@ -694,7 +694,9 @@ public class CinemaActivity extends Activity {
                     return;
                 }
                 long minutes=Math.max(0,(s.l("starts_at")-System.currentTimeMillis())/60000);
-                int occupancy=(s.i("capacity")-s.i("free"))*100/s.i("capacity");
+                // 1.2.1 hotfix: shows has no "capacity" column (read as 0 -> divide by zero). Capacity = rows * cols.
+                int capacity=s.i("rows_count")*s.i("cols_count");
+                int occupancy=capacity<=0?0:(capacity-s.i("free"))*100/capacity;
                 countdown.setText("Начало через "+minutes+" мин  ·  зал заполнен на "+occupancy+"%");
                 countdown.postDelayed(this,60000);
             }
