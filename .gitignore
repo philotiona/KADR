@@ -1,0 +1,25 @@
+/.gradle/
+/.idea/
+/local.properties
+/build/
+/*/build/
+/output/
+*.iml
+
+# Lab reports and generators with personal data stay local
+/docs/*.docx
+/docs/*.pdf
+/docs/practical6/
+/tools/make_report.py
+/tools/practical6.py
+/tools/update_database_report.py
+/tools/lab8/
+
+# Signing material and secrets (Lab 8, task 3 and 5)
+*.jks
+*.keystore
+keystore.properties
+.env
+*.env
+google-services.json
+/release-artifacts/

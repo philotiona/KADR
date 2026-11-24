@@ -1,0 +1,89 @@
+plugins {
+    id 'com.android.application'
+}
+
+def legacySmoke = providers.gradleProperty('legacySmoke').isPresent()
+def orchestrateLab = providers.gradleProperty('orchestrateLab').isPresent()
+def isolatedTests = orchestrateLab || providers.gradleProperty('isolateLab').isPresent()
+def labCoverage = providers.gradleProperty('labCoverage').isPresent()
+def robolectricLab = providers.gradleProperty('robolectricLab').isPresent()
+def espressoVersion = '3.7.0'
+
+android {
+    namespace 'com.example.kaspikids'
+    compileSdk 35
+    buildFeatures {
+        buildConfig true
+    }
+    defaultConfig {
+        applicationId "com.example.kaspikids"
+        minSdk 24
+        targetSdk 35
+        versionCode 100
+        versionName "0.1.0"
+        testInstrumentationRunner legacySmoke
+                ? 'com.example.kaspikids.CinemaSmokeTest'
+                : 'androidx.test.runner.AndroidJUnitRunner'
+        if (orchestrateLab) {
+            testInstrumentationRunnerArguments clearPackageData: 'true'
+        }
+    }
+
+    buildTypes {
+        debug {
+            if (isolatedTests) applicationIdSuffix '.labtest'
+            enableUnitTestCoverage labCoverage
+            enableAndroidTestCoverage labCoverage
+        }
+        benchmark {
+            initWith release
+            applicationIdSuffix '.benchmark'
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['release']
+        }
+    }
+
+    sourceSets {
+        release.java.srcDir 'src/production/java'
+        benchmark.java.srcDir 'src/production/java'
+        if (robolectricLab) testDebug.java.srcDir 'src/testRobolectric/java'
+    }
+
+    testOptions {
+        animationsDisabled = true
+        unitTests.includeAndroidResources = robolectricLab
+        unitTests.all { test ->
+            test.systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+        }
+        if (orchestrateLab) execution 'ANDROIDX_TEST_ORCHESTRATOR'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    debugImplementation "androidx.test.espresso:espresso-idling-resource:$espressoVersion"
+    debugImplementation 'androidx.room:room-runtime:2.6.1'
+    debugAnnotationProcessor 'androidx.room:room-compiler:2.6.1'
+    debugImplementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
+
+    testImplementation 'junit:junit:4.13.2'
+    testDebugImplementation 'org.mockito:mockito-core:5.18.0'
+    testDebugImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+    testDebugImplementation 'org.json:json:20240303'
+    if (robolectricLab) {
+        testDebugImplementation 'androidx.test:core:1.6.1'
+        testDebugImplementation 'org.robolectric:robolectric:4.15.1'
+    }
+
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$espressoVersion"
+    androidTestUtil 'androidx.test:orchestrator:1.5.1'
+}
+

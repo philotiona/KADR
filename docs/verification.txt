@@ -1,0 +1,21 @@
+KADR verification — 27 October 2026
+
+PASS — assembleDebug and assembleDebugAndroidTest, offline, existing Gradle 9.3.0.
+PASS — 65 host checks: credentials, salted password hashing, prices, limits, QR and calendar formatting.
+PASS — 70 Android checks: authentication, user/admin access, ownership, account management, profile, reviews, favorites, movies, halls, show conflicts, seat reservation transactions, concurrent connections, cancellations, cashier payment, single-use admission, persistence, and nine unobscured UI screens.
+PASS — all 441 QR modules match the independent ReportLab encoder.
+PASS — schema SQL executes in SQLite: 10 tables and 2 indexes.
+PASS — real PNG output created on Android; ICS UTC, escaping and line-folding checked.
+
+Android lint could not run: Android Gradle Plugin 8.7.3's older lint engine rejects the installed Java 25 version (25.0.3). App compilation and runtime verification pass. No Gradle upgrade or reinstall was performed.
+
+Database: on-device SQLite. Oracle is not needed. No shared backend or online acquiring is connected; payment is recorded by the administrator at the physical cinema cash desk.
+
+Report: title page adapted from the supplied CLOUDLAB1 document; original file left unchanged. Student, group, university logo and instructor retained; course and topic updated. Check the course and instructor before submission.
+PASS — 4 additional administrator schedule regression checks; all-film sentinel uses an explicit INTEGER cast for SQLite bound parameters.
+
+3 November 2026 — embedded database explorer
+PASS — final app and instrumentation APKs built offline using existing Gradle; installed on the running Android emulator.
+PASS — 35 targeted Android checks: live 10-table/66-column/11-FK metadata, role enforcement, invalid sessions, injection rejection, credential redaction, search/sort/pagination, index metadata, integrity, CSV, actual SQL file export, navbar integration and diagram viewport restoration.
+Screenshots: output/screenshots/10-database-er.png through 14-database-viewer.png.
+Ready APK: output/KADR.apk. Existing schema and user data retained.
